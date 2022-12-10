@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meklēt</title>
+</head>
+<body>
+    <style>
+        * {
+            padding: 10px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        body { 
+            background-color: grey;
+        }
+
+        h2 {
+            color: greenyellow;
+            background-color: grey;
+        }
+
+        button {
+            width: auto;
+            height: auto;
+        }
+        
+        #meklet {
+            border: none;
+            background-color: rgb(248, 255, 185);
+        }
+        
+        
+    </style>
+    <script>
+        async function main(word) {
+            const res = await fetch("https://api.tezaurs.lv/v1/examples/" + word);
+            const json = await res.json();
+            return json;
+        }
+
+        async function inflections(word) {
+            const res = await fetch("https://api.tezaurs.lv/v1/inflections/" + word);
+            const json = await res.json();
+            return json;
+        }
+
+
+        function factorial(n){
+            let answer = 1;
+            if (n == 0 || n == 1){
+            return answer;
+            }else{
+            for(var i = n; i >= 1; i--){
+                answer = answer * i;
+            }
+            return answer;
+            }  
+        }
+
+        function swap(chars, i, j) {
+            var tmp = chars[i];
+            chars[i] = chars[j];
+            chars[j] = tmp;
+        }
+
+        function getAnagrams(input) {
+            var counter = [],
+                anagrams = [],
+                chars = input.split(''),
+                length = chars.length,
+                i;
+
+            for (i = 0; i < length; i++) {
+                counter[i] = 0;
+            }
+
+            anagrams.push(input);
+            i = 0;
+            while (i < length) {
+                if (counter[i] < i) {
+                    swap(chars, i % 2 === 1 ? counter[i] : 0, i);
+                    counter[i]++;
+                    i = 0;
+                    anagrams.push(chars.join(''));
+                } else {
+                    counter[i] = 0;
+                    i++;
+                }
+            }
+
+            return anagrams;
+        }
+
+        function filt(comb) {
+            const bpb = ['s', 'a', 'e', 'i']; // burti parasti beigas
+
+            const correctlist = [];
+
+            for (let i = 0; i < comb.length; i++) {
+                for (let j = 0; j < bpb.length; j++) {
+                    if (comb[i].endsWith(bpb[j])) {
+                        correctlist.unshift(comb[i]);
+                        comb.splice(i, 1);
+                    }
+                }
+                correctlist.push(comb[i]);
+            }
+            return correctlist;
+        }
+
+        async function atrastLocijumus(vards) {
+            const res = await fetch("https://api.tezaurs.lv/v1/inflections/" + vards);
+            const json = await res.json();
+            const locijumi = [];
+            for (let i = 0; i < json[0].length; i++) {
+                locijumi.push(json[0][i]['Vārds']);
+            }
+
+            return locijumi;
+        }
+
+        function nonemburtu(vards, reize) {
+            return vards.replace(vards[vards.length-reize], '');
+        }
+
+        async function getword(l='', count, combinations, words, lorig=null, times=0, combi) {
+            if (!combinations || combinations.length == 0) {
+                combinations = getAnagrams(l);
+                combinations = filt(combinations);
+            }
+            if (!words) words = [];
+
+            let word = [];
+            let found = false;
+            while (!found) {
+                if (count[1] == combi) {
+                    const comp = document.getElementById('comp');
+                    comp.innerHTML = "Pabeidza meklēt.";
+                    document.getElementById('meklet').style.display = "inline";
+                    return
+                }
+
+                // checking if the word exists
+                word = await main(combinations[count[0]]);
+                if (word.length > 1) found = true;
+                else {
+                    // skip
+
+                }
+                word = combinations[count[0]];
+                count[0]++;
+                count[1]++;
+
+                // parbaudam vai jau tie procenti tika ievaditi
+                const prev = Math.floor(((count[1]-1)/combi)*100);
+                const jauns = Math.floor(((count[1])/combi)*100);
+                if (prev != jauns && jauns < 101) {
+                    const comp = document.getElementById('comp');
+                    comp.innerHTML = jauns + "%";
+                }
+
+
+                if (count[0] > combinations.length) {
+                    // vairak iespejamu vardu kombinaciju nav
+                    if (words.length != 0) { // piedavajam citas opcijas
+                        console.log("Atradam " + words.join(" "));
+                        if (words.length == 1) {
+                            const locijumi = await atrastLocijumus(words[0]);
+                            console.log("Iespejeami locijumi: " + locijumi.join());
+                        }
+                    }
+                    
+                    // visas kombinacijas tika izmantotas
+                    // meiginam atkal bet nonemam burtu
+                    if (!lorig) { // sis ir pirmais meiginajums nonemt burtu
+                        setTimeout(function() {
+                            const lett = l.slice(0, -1);
+                            getword(lett, [0, count[1]], null, words, l, 1, combi);
+                        }, 500);
+                        return;
+                    } else {
+                        if (times == lorig.length) {
+                            if (l.length > 3) {
+                                getword(l, [0, count[1]], null, words, l, 0, combi)
+                            }
+                            return;
+                        }
+                        const lett = nonemburtu(lorig, times);
+                        times += 1;
+                        getword(lett, [0, count[1]], null, words, lorig, times, combi);
+                        return;
+                    }
+                }
+            }
+            // parbaudam vai jau tads vards ir
+            if (!words.includes(word)){
+                const result = document.getElementById('res');
+                const btn = document.createElement('button');
+                btn.textContent = word
+                btn.v = word
+                btn.onclick = async function() {
+                    const locijumi = await atrastLocijumus(this.v)
+                    const loc = document.getElementById('loc');
+                    loc.innerHTML = "locijumi vardam : "+locijumi.join(", ")
+                }
+                result.appendChild(btn)
+                console.log(word);
+                words.push(word);
+
+                const atrastiv = document.getElementById('atrasti');
+                atrastiv.innerHTML = "Atrasti vardi: " + words.length
+            }   
+
+            // we continue to search for more words
+            getword(l, count, combinations, words, lorig, times, combi);
+        }
+
+        async function btnClick() {
+            const val = document.getElementById('fname').value;
+            const result = document.getElementById('res');
+            result.innerHTML = "";
+            if (val.length == 3) {
+                return;
+            }
+            const comp = document.getElementById('comp');
+            comp.innerHTML = '';
+
+            let combinacijas = factorial(val.length) + (factorial(val.length-1) * (val.length-1));
+            if (val.length > 3) combinacijas += + (factorial(val.length-2) * (val.length-2));
+            const comb = document.getElementById('comb');
+            comb.innerHTML = "Vardu kombinacijas: "+combinacijas;
+
+            document.getElementById('atrasti').innerHTML = "Atrasti vardi: 0";;
+            document.getElementById('meklet').style.display = "none";
+            document.getElementById('atrasti').innerHTML = ""
+            
+
+            getword(val, [0,0], null, null, null, null, combinacijas);
+        }
+    </script>
+    <label for="fname">Burti:</label>
+    <input type="text" id="fname" name="fname">
+    <button id='meklet' onclick="btnClick()">Meklēt!</button>
+    <div id="res"></div><h3 id="comp"></h3><h4 id="comb"></h4>
+    <h4 id="atrasti"></h4>
+    <h4 id="loc"></h4>
+</body>
+</html>
