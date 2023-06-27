@@ -5,11 +5,9 @@ This bot makes words out of a string of letters given and checks them using teza
 First check if you have node / npm installed by typing this into the command prompt
 ```bash
 node --version
-
-- output
-v18.12.1
 ```
-If you don't have [node](https://nodejs.org/en/download/) installed install it
+
+If you don't have [node](https://nodejs.org/en/download/) installed here's where you can find it.
 
 ## Install the dependenices
 Use the npm package manager.
