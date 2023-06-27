@@ -28,7 +28,7 @@ fs.readFile('./Scrable/main.html', function (err, html) {
     });
 
     server.listen(port, hostname, () => {
-        console.log(`Server running at ${chalk.red(`http://${hostname}:${port}`)}`)
+        console.log(`Server running at ${chalk.green(`http://${hostname}:${port}`)}`)
     });
 });
 

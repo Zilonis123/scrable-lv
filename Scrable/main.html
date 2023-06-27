@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meklēt</title>
+    <title>Scrabble solver!</title>
 </head>
 <body>
+
+    <label for="fname">Letters:</label>
+    <input type="text" id="fname" name="fname">
+    <button id="search">Search</button>
+    <div id="res"></div><h3 id="comp"></h3><h4 id="comb"></h4>
+    <h4 id="atrasti"></h4>
+    <h4 id="loc"></h4>
+
     <style>
         * {
             padding: 10px;
@@ -31,14 +39,19 @@
             width: auto;
             height: auto;
         }
+
+        button:hover {
+            cursor:pointer;
+        }
         
-        #meklet {
+        #search {
             border: none;
             background-color: rgb(248, 255, 185);
         }
         
         
     </style>
+
     <script>
         async function main(word) {
             const res = await fetch("https://api.tezaurs.lv/v1/examples/" + word);
@@ -127,7 +140,7 @@
             return locijumi;
         }
 
-        function nonemburtu(vards, reize) {
+        function removeLetter(vards, reize) {
             return vards.replace(vards[vards.length-reize], '');
         }
 
@@ -171,20 +184,20 @@
                 if (count[0] > combinations.length) {
                     // vairak iespejamu vardu kombinaciju nav
                     if (words.length != 0) { // piedavajam citas opcijas
-                        console.log("Atradam " + words.join(" "));
+                        console.log("Found " + words.join(" "));
                         if (words.length == 1) {
                             const locijumi = await atrastLocijumus(words[0]);
-                            console.log("Iespejeami locijumi: " + locijumi.join());
+                            console.log("Possible: " + locijumi.join());
                         }
                     }
                     
-                    // visas kombinacijas tika izmantotas
-                    // meiginam atkal bet nonemam burtu
-                    if (!lorig) { // sis ir pirmais meiginajums nonemt burtu
+                    // All combinations where used
+                    // Trying again but removing a letter
+                    if (!lorig) { // This is the first attempt on trying to remove a letter
                         setTimeout(function() {
                             const lett = l.slice(0, -1);
                             getword(lett, [0, count[1]], null, words, l, 1, combi);
-                        }, 500);
+                        }, 0);
                         return;
                     } else {
                         if (times == lorig.length) {
@@ -193,7 +206,7 @@
                             }
                             return;
                         }
-                        const lett = nonemburtu(lorig, times);
+                        const lett = removeLetter(lorig, times);
                         times += 1;
                         getword(lett, [0, count[1]], null, words, lorig, times, combi);
                         return;
@@ -212,7 +225,6 @@
                     loc.innerHTML = "locijumi vardam : "+locijumi.join(", ")
                 }
                 result.appendChild(btn)
-                console.log(word);
                 words.push(word);
 
                 const atrastiv = document.getElementById('atrasti');
@@ -223,34 +235,39 @@
             getword(l, count, combinations, words, lorig, times, combi);
         }
 
-        async function btnClick() {
+
+
+        async function search() {
+
             const val = document.getElementById('fname').value;
             const result = document.getElementById('res');
+
             result.innerHTML = "";
             if (val.length == 3) {
                 return;
             }
             const comp = document.getElementById('comp');
+
             comp.innerHTML = '';
 
             let combinacijas = factorial(val.length) + (factorial(val.length-1) * (val.length-1));
             if (val.length > 3) combinacijas += + (factorial(val.length-2) * (val.length-2));
-            const comb = document.getElementById('comb');
-            comb.innerHTML = "Vardu kombinacijas: "+combinacijas;
 
-            document.getElementById('atrasti').innerHTML = "Atrasti vardi: 0";;
-            document.getElementById('meklet').style.display = "none";
-            document.getElementById('atrasti').innerHTML = ""
+            comp.innerHTML = "Vardu kombinacijas: "+combinacijas;
+
+            const found = document.getElementById('atrasti');
+            const search = document.getElementById('search');
+
+            found.innerHTML = "Atrasti vardi: 0";;
+            search.style.display = "none";
+            found.innerHTML = ""
             
 
             getword(val, [0,0], null, null, null, null, combinacijas);
         }
+
+        console.log("asd")
+        document.getElementById("search").addEventListener("click", search); 
     </script>
-    <label for="fname">Burti:</label>
-    <input type="text" id="fname" name="fname">
-    <button id='meklet' onclick="btnClick()">Meklēt!</button>
-    <div id="res"></div><h3 id="comp"></h3><h4 id="comb"></h4>
-    <h4 id="atrasti"></h4>
-    <h4 id="loc"></h4>
 </body>
 </html>
