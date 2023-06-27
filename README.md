@@ -1,5 +1,5 @@
-# Scrable
-This bot makes words out of a string of letters given and checks them using tezaurs.lv api
+# Scrabble
+Website running with http and accesing https://tezaurs.lv api.
 
 ## How to download
 First check if you have node.js installed by writting this into the command prompt
@@ -28,3 +28,7 @@ Then you may start the application with this line
 node .
 ```
 If everything went good and the ip was correct the website is now working! 👍
+
+### Instructions
+In the input section on the web place your letters (Note that the more letters you place the more word combinations the website will check)
+and click the "Search" button. If everything goes well there will be some results presented as buttons that when clicked show inflections of the word.
