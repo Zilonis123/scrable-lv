@@ -11,15 +11,28 @@
     <label for="fname">Letters:</label>
     <input type="text" id="fname" name="fname">
     <button id="search">Search</button>
-    <div id="res"></div><h3 id="comp"></h3><h4 id="comb"></h4>
-    <h4 id="atrasti"></h4>
-    <h4 id="loc"></h4>
+    <div id="res"></div>
+    <div class="data">
+        <h3 id="comp"></h3>
+        <h4 id="comb"></h4>
+        <h4 id="found"></h4>
+        <h4 id="loc"></h4>
+    </div>
+    
 
     <style>
         * {
             padding: 10px;
             text-align: center;
             margin-top: 15px;
+        }
+
+        .data {
+            display: grid;
+            grid-template-areas: auto
+            auto
+            auto
+            auto;
         }
 
         button {
@@ -140,14 +153,15 @@
             return list.filter((element) => {
                 const lastChar = element[element.length - 1];
                 return lastChar === 's' || lastChar === 'a' || lastChar === "ē" ||
-                 lastChar === 'ī' || lastChar === "e" || lastChar === 'im' || lastChar === "iem";
+                 lastChar === 'ī' || lastChar === "e" || lastChar === 'im' || lastChar === "iem"
+                 || lastChar === "u";
             });
         }
 
         async function findInflections(word) {
             const response = await fetch(`https://api.tezaurs.lv/v1/inflections/${word}`);
             const json = await response.json();
-            return json[0].map(entry => entry.Vārds); // Vārds stands for word
+            return json[0].map(entry => entry["Vārds"]); // Vārds stands for word
         }
 
         function removeLetter(word, time) {
@@ -171,105 +185,62 @@
             return uniqueStrings;
         }
 
+        function displayWord(word) {
+            var result = document.getElementById("res")
+            var btn = document.createElement('button');
+            btn.textContent = word
+            btn.w = word
+            btn.onclick = async function() {
+                var inflections = await findInflections(this.w)
+                var loc = document.getElementById('loc');
+                loc.innerHTML = "Inflections for " + this.w + " : "+inflections.join(", ")
+            }
+            result.appendChild(btn)
+        }
 
-        async function getword(l='', count, combinations, words, lorig=null, times=0, combi) {
 
-            if (!combinations || combinations.length == 0) {
-                // If no words generated generate them
-                const res = getAnagrams(l);
-                combinations = res[0];
-                const removedWordCount = res[1];
+        async function getword(letters, allCombinations, combinations=[], words=[]) {
 
-                prevCombinationLen = combinations.length
+            if (combinations.length == 0) {
+                // If no words generated generate then
+                combinations = getAnagrams(letters)[0];
 
-                
                 // remove duplications of words
-                combinations = removeDuplicates(combinations)
+                combinations = removeDuplicates(combinations);
 
                 // Remove "words" we know that definetly aren't words
                 combinations = removeNonMatchingElements(combinations);
-
-                // Make sure the progress bar is displaying correctly
-                const difference = prevCombinationLen-combinations.length
-                combi = combi - difference - removedWordCount;
-
             }
 
-            if (!words) words = [];
-
-            let word = [];
-            let found = false;
-            while (!found) {
-                if (count[1] == combi) {
-                    document.getElementById('comp').innerHTML = "Done!";
-                    return
-                }
-
+            let wordsFound = [];
+            let on = 0; // On what "combination" we are on?
+            while (combinations.length > on) {
+                // let realWord = false;
                 // checking if the word exists
-                word = await main(combinations[count[0]]);
-                if (word.length > 1) found = true;
-
-                word = combinations[count[0]];
-                count[0]++;
-                count[1]++;
-
-                const prev = Math.floor(((count[1]-1)/combi)*100);
-                const newPercentage = Math.floor(((count[1])/combi)*100);
-
-                if (prev != newPercentage && newPercentage < 101) {
-                    const comp = document.getElementById('comp');
-                    comp.innerHTML = `(${newPercentage}%) Checking ${combinations.length} words`;
+                let word = await main(combinations[on]);
+                if (word.length > 1) {
+                    // it exists
+                    word = combinations[on]
+                    wordsFound.push(word); 
+                    displayWord(word)
                 }
 
+                on += 1
 
-                if (count[0] > combinations.length) {
-                    // No more possible combinations
-                    if (words.length != 0 && words.length == 1) { // Give other options
-                        const locijumi = await findInflections(words[0]);
-                    }
-                    
-                    // All combinations where used
-                    // Trying again but removing a letter
-                    if (!lorig) { // This is the first attempt on trying to remove a letter
-                        setTimeout(function() {
-                            const lett = l.slice(0, -1);
-                            getword(lett, [0, count[1]], null, words, l, 1, combi);
-                        }, 0);
-                        return;
-                    } else {
-                        if (times == lorig.length) {
-                            if (l.length > 3) {
-                                getword(l, [0, count[1]], null, words, l, 0, combi)
-                            }
-                            return;
-                        }
-                        const lett = removeLetter(lorig, times);
-                        times += 1;
-                        getword(lett, [0, count[1]], null, words, lorig, times, combi);
-                        return;
-                    }
-                }
+                var Percentage = Math.floor((on/combinations.length)*100); // How much progress has been done?
+                var words = combinations.length-on;
+                document.getElementById('comp').innerHTML = `(${Percentage}%) Checking ${words} ${words === 1 ? "word" : "words"}`;
             }
-            // parbaudam vai jau tads vards ir
-            if (!words.includes(word)){
-                const result = document.getElementById('res');
-                const btn = document.createElement('button');
-                btn.textContent = word
-                btn.v = word
-                btn.onclick = async function() {
-                    const locijumi = await findInflections(this.v)
-                    const loc = document.getElementById('loc');
-                    loc.innerHTML = "Inflections for word : "+locijumi.join(", ")
-                }
-                result.appendChild(btn)
-                words.push(word);
 
-                const atrastiv = document.getElementById('atrasti');
-                atrastiv.innerHTML = "Found words: " + words.length
-            }   
+            // We are done with this cycle.
+            document.getElementById('comp').innerHTML = "Done!";
+            
+
+            document.getElementById('found').innerHTML = `Found ${wordsFound.length} ${wordsFound.length === 1 ? "word" : "words"}`
+            
 
             // we continue to search for more words
-            getword(l, count, combinations, words, lorig, times, combi);
+            // getword(l, count, combinations, words, lorig, times, combi);
         }
 
 
@@ -287,8 +258,7 @@
 
             comp.innerHTML = '';
 
-            let combinations = factorial(val.length) + (factorial(val.length-1) * (val.length-1));
-            if (val.length > 3) combinations += + (factorial(val.length-2) * (val.length-2));
+            let combinations = factorial(val.length)
 
             comp.innerHTML = "Estimated words: "+combinations;
 
@@ -299,7 +269,7 @@
             cache = []
             
 
-            await getword(val, [0,0], null, null, null, null, combinations);
+            await getword(val, combinations);
             search.style.display = "inline";
         }
 
