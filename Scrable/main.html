@@ -79,9 +79,7 @@
         }
 
         function swap(chars, i, j) {
-            var tmp = chars[i];
-            chars[i] = chars[j];
-            chars[j] = tmp;
+            [chars[i], chars[j]] = [chars[j], chars[i]];
         }
 
         function getAnagrams(input) {
@@ -155,9 +153,7 @@
             let found = false;
             while (!found) {
                 if (count[1] == combi) {
-                    const comp = document.getElementById('comp');
-                    comp.innerHTML = "Pabeidza meklēt.";
-                    document.getElementById('meklet').style.display = "inline";
+                    document.getElementById('comp').innerHTML = "Finished Searching.";
                     return
                 }
 
@@ -222,13 +218,13 @@
                 btn.onclick = async function() {
                     const locijumi = await atrastLocijumus(this.v)
                     const loc = document.getElementById('loc');
-                    loc.innerHTML = "locijumi vardam : "+locijumi.join(", ")
+                    loc.innerHTML = "Inflections for word : "+locijumi.join(", ")
                 }
                 result.appendChild(btn)
                 words.push(word);
 
                 const atrastiv = document.getElementById('atrasti');
-                atrastiv.innerHTML = "Atrasti vardi: " + words.length
+                atrastiv.innerHTML = "Found words: " + words.length
             }   
 
             // we continue to search for more words
@@ -255,15 +251,13 @@
 
             comp.innerHTML = "Vardu kombinacijas: "+combinacijas;
 
-            const found = document.getElementById('atrasti');
             const search = document.getElementById('search');
 
-            found.innerHTML = "Atrasti vardi: 0";;
             search.style.display = "none";
-            found.innerHTML = ""
             
 
-            getword(val, [0,0], null, null, null, null, combinacijas);
+            await getword(val, [0,0], null, null, null, null, combinacijas);
+            search.style.display = "inline";
         }
 
         console.log("asd")
