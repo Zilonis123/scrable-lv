@@ -53,18 +53,13 @@
     </style>
 
     <script>
+        let cache = [];
+
         async function main(word) {
             const res = await fetch("https://api.tezaurs.lv/v1/examples/" + word);
             const json = await res.json();
             return json;
         }
-
-        async function inflections(word) {
-            const res = await fetch("https://api.tezaurs.lv/v1/inflections/" + word);
-            const json = await res.json();
-            return json;
-        }
-
 
         function factorial(n){
             let answer = 1;
@@ -82,12 +77,15 @@
             [chars[i], chars[j]] = [chars[j], chars[i]];
         }
 
+
         function getAnagrams(input) {
             var counter = [],
                 anagrams = [],
                 chars = input.split(''),
                 length = chars.length,
                 i;
+
+            let removedWords = 0;
 
             for (i = 0; i < length; i++) {
                 counter[i] = 0;
@@ -100,91 +98,112 @@
                     swap(chars, i % 2 === 1 ? counter[i] : 0, i);
                     counter[i]++;
                     i = 0;
-                    anagrams.push(chars.join(''));
+
+                    const word = chars.join("");
+
+                    if (!cache.includes(word)) {
+                        anagrams.push(word);
+                        cache.push(word);
+                    } else removedWords += 1;
                 } else {
                     counter[i] = 0;
                     i++;
                 }
             }
 
-            return anagrams;
+            return [anagrams, removedWords];
         }
 
-        function filt(comb) {
-            const bpb = ['s', 'a', 'e', 'i']; // burti parasti beigas
+        function removeNonMatchingElements(list) {
+            return list.filter((element) => {
+                const lastChar = element[element.length - 1];
+                return lastChar === 's' || lastChar === 'a' || lastChar === "ē" ||
+                 lastChar === 'ī' || lastChar === "e" || lastChar === 'im' || lastChar === "iem";
+            });
+        }
 
-            const correctlist = [];
+        async function findInflections(word) {
+            const response = await fetch(`https://api.tezaurs.lv/v1/inflections/${word}`);
+            const json = await response.json();
+            return json[0].map(entry => entry.Vārds); // Vārds stands for word
+        }
 
-            for (let i = 0; i < comb.length; i++) {
-                for (let j = 0; j < bpb.length; j++) {
-                    if (comb[i].endsWith(bpb[j])) {
-                        correctlist.unshift(comb[i]);
-                        comb.splice(i, 1);
-                    }
+        function removeLetter(word, time) {
+            return word.replace(word[word.length-time], '');
+        }
+
+        function removeDuplicates(list) {
+            var uniqueStrings = [];
+            var duplicates = [];
+
+            for (var i = 0; i < list.length; i++) {
+                var currentItem = list[i];
+
+                if (uniqueStrings.includes(currentItem)) {
+                    duplicates.push(currentItem);
+                } else {
+                    uniqueStrings.push(currentItem);
                 }
-                correctlist.push(comb[i]);
-            }
-            return correctlist;
-        }
-
-        async function atrastLocijumus(vards) {
-            const res = await fetch("https://api.tezaurs.lv/v1/inflections/" + vards);
-            const json = await res.json();
-            const locijumi = [];
-            for (let i = 0; i < json[0].length; i++) {
-                locijumi.push(json[0][i]['Vārds']);
             }
 
-            return locijumi;
+            return uniqueStrings;
         }
 
-        function removeLetter(vards, reize) {
-            return vards.replace(vards[vards.length-reize], '');
-        }
 
         async function getword(l='', count, combinations, words, lorig=null, times=0, combi) {
+
             if (!combinations || combinations.length == 0) {
-                combinations = getAnagrams(l);
-                combinations = filt(combinations);
+                // If no words generated generate them
+                const res = getAnagrams(l);
+                combinations = res[0];
+                const removedWordCount = res[1];
+
+                prevCombinationLen = combinations.length
+
+                
+                // remove duplications of words
+                combinations = removeDuplicates(combinations)
+
+                // Remove "words" we know that definetly aren't words
+                combinations = removeNonMatchingElements(combinations);
+
+                // Make sure the progress bar is displaying correctly
+                const difference = prevCombinationLen-combinations.length
+                combi = combi - difference - removedWordCount;
+
             }
+
             if (!words) words = [];
 
             let word = [];
             let found = false;
             while (!found) {
                 if (count[1] == combi) {
-                    document.getElementById('comp').innerHTML = "Finished Searching.";
+                    document.getElementById('comp').innerHTML = "Done!";
                     return
                 }
 
                 // checking if the word exists
                 word = await main(combinations[count[0]]);
                 if (word.length > 1) found = true;
-                else {
-                    // skip
 
-                }
                 word = combinations[count[0]];
                 count[0]++;
                 count[1]++;
 
-                // parbaudam vai jau tie procenti tika ievaditi
                 const prev = Math.floor(((count[1]-1)/combi)*100);
-                const jauns = Math.floor(((count[1])/combi)*100);
-                if (prev != jauns && jauns < 101) {
+                const newPercentage = Math.floor(((count[1])/combi)*100);
+
+                if (prev != newPercentage && newPercentage < 101) {
                     const comp = document.getElementById('comp');
-                    comp.innerHTML = jauns + "%";
+                    comp.innerHTML = `(${newPercentage}%) Checking ${combinations.length} words`;
                 }
 
 
                 if (count[0] > combinations.length) {
-                    // vairak iespejamu vardu kombinaciju nav
-                    if (words.length != 0) { // piedavajam citas opcijas
-                        console.log("Found " + words.join(" "));
-                        if (words.length == 1) {
-                            const locijumi = await atrastLocijumus(words[0]);
-                            console.log("Possible: " + locijumi.join());
-                        }
+                    // No more possible combinations
+                    if (words.length != 0 && words.length == 1) { // Give other options
+                        const locijumi = await findInflections(words[0]);
                     }
                     
                     // All combinations where used
@@ -216,7 +235,7 @@
                 btn.textContent = word
                 btn.v = word
                 btn.onclick = async function() {
-                    const locijumi = await atrastLocijumus(this.v)
+                    const locijumi = await findInflections(this.v)
                     const loc = document.getElementById('loc');
                     loc.innerHTML = "Inflections for word : "+locijumi.join(", ")
                 }
@@ -246,21 +265,22 @@
 
             comp.innerHTML = '';
 
-            let combinacijas = factorial(val.length) + (factorial(val.length-1) * (val.length-1));
-            if (val.length > 3) combinacijas += + (factorial(val.length-2) * (val.length-2));
+            let combinations = factorial(val.length) + (factorial(val.length-1) * (val.length-1));
+            if (val.length > 3) combinations += + (factorial(val.length-2) * (val.length-2));
 
-            comp.innerHTML = "Vardu kombinacijas: "+combinacijas;
+            comp.innerHTML = "Estimated words: "+combinations;
 
             const search = document.getElementById('search');
 
             search.style.display = "none";
+
+            cache = []
             
 
-            await getword(val, [0,0], null, null, null, null, combinacijas);
+            await getword(val, [0,0], null, null, null, null, combinations);
             search.style.display = "inline";
         }
 
-        console.log("asd")
         document.getElementById("search").addEventListener("click", search); 
     </script>
 </body>
