@@ -15,7 +15,6 @@
     <div class="data">
         <h3 id="comp"></h3>
         <h4 id="comb"></h4>
-        <h4 id="found"></h4>
         <h4 id="loc"></h4>
     </div>
     
@@ -42,6 +41,24 @@
 
         button:hover {
             cursor:pointer;
+        }
+
+        .result {
+            display: inline-block;
+            outline: 0;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 4px;
+            font-size: 13px;
+            height: 30px;
+            background-color: #0000000d;
+            color: #0e0e10;
+            padding: 0 10px;
+        }
+
+        .result:hover {
+            background-color: #0000001a;
         }
         
         #search {
@@ -126,7 +143,10 @@
                 counter[i] = 0;
             }
 
-            anagrams.push(input);
+            if (!cache.includes(input)) {
+                anagrams.push(input);
+                cache.push(input);
+            } else removedWords += 1;
             i = 0;
             while (i < length) {
                 if (counter[i] < i) {
@@ -190,6 +210,7 @@
             var btn = document.createElement('button');
             btn.textContent = word
             btn.w = word
+            btn.classList.add("result")
             btn.onclick = async function() {
                 var inflections = await findInflections(this.w)
                 var loc = document.getElementById('loc');
@@ -199,18 +220,17 @@
         }
 
 
-        async function getword(letters, allCombinations, combinations=[], words=[]) {
+        async function getword(letters) {
+            
+            // Generate all possible words from letters (if they arent in the cache)
+            let combinations = getAnagrams(letters)[0];
 
-            if (combinations.length == 0) {
-                // If no words generated generate then
-                combinations = getAnagrams(letters)[0];
+            // remove duplications of words
+            combinations = removeDuplicates(combinations);
 
-                // remove duplications of words
-                combinations = removeDuplicates(combinations);
-
-                // Remove "words" we know that definetly aren't words
-                combinations = removeNonMatchingElements(combinations);
-            }
+            // Remove "words" we know that definetly aren't words
+            combinations = removeNonMatchingElements(combinations);
+        
 
             let wordsFound = [];
             let on = 0; // On what "combination" we are on?
@@ -233,14 +253,29 @@
             }
 
             // We are done with this cycle.
-            document.getElementById('comp').innerHTML = "Done!";
+            // remove some letters and start again
             
+            if (letters.length === 3) return;
 
-            document.getElementById('found').innerHTML = `Found ${wordsFound.length} ${wordsFound.length === 1 ? "word" : "words"}`
+            const changedWords = removeAndAddToList(letters);
             
+            for (let i = 0; changedWords.length > i; i++) {
+                
+                await getword(changedWords[i])
+            }
+        }
 
-            // we continue to search for more words
-            // getword(l, count, combinations, words, lorig, times, combi);
+        function removeAndAddToList(str) {
+            var resultList = [];
+
+            for (var i = 0; i < str.length; i++) {
+                var modifiedStr = str.slice(0, i) + str.slice(i + 1);
+                resultList.push(modifiedStr);
+            }
+
+
+            // Output: ["xample", "eample", "exmple", "exaple", "examle", "exampe", "exampl"]
+            return resultList;
         }
 
 
@@ -269,8 +304,9 @@
             cache = []
             
 
-            await getword(val, combinations);
+            await getword(val);
             search.style.display = "inline";
+            document.getElementById('comp').innerHTML = "Done!";
         }
 
         document.getElementById("search").addEventListener("click", search); 
