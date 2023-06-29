@@ -376,7 +376,7 @@
             
             const start = performance.now()
 
-            await getword(val);
+            await getword(val.toLowerCase());
             search.style.display = "inline";
 
             const speed = Math.floor(performance.now()-start)/1000
