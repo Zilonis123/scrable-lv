@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrabble solver!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap" rel="stylesheet">    <title>Scrabble solver!</title>
 </head>
 <body>
 
@@ -24,6 +26,19 @@
             padding: 10px;
             text-align: center;
             margin-top: 15px;
+            font-family: 'Lato', sans-serif;
+            font-weight: 300;
+        }
+
+        label, input, button {
+            font-weight: 400;
+        }
+
+        #res {
+            display: grid;
+            gap: 5px;
+            justify-content: center;
+            grid-template-columns: auto auto auto auto;
         }
 
         .data {
@@ -174,7 +189,7 @@
                 const lastChar = element[element.length - 1];
                 return lastChar === 's' || lastChar === 'a' || lastChar === "ē" ||
                  lastChar === 'ī' || lastChar === "e" || lastChar === 'im' || lastChar === "iem"
-                 || lastChar === "u";
+                 || lastChar === "u" || lastChar === "i";
             });
         }
 
@@ -205,6 +220,56 @@
             return uniqueStrings;
         }
 
+        function rearrangeStrings(arr) {
+        const frontList = [];
+        const rearList = [];
+
+        const prefixes = new Set(["aiz", "ap", "at", "bez", "caur", "ie", "iz", "ne", "no", 
+            "pa", "pār", "pēc", "pie", "pret", "sa", "uz"]);
+
+        for (let i = 0; i < arr.length; i++) {
+            const currentString = arr[i];
+            let hasPrefix = false;
+            for (const prefix of prefixes) {
+                if (currentString.startsWith(prefix)) {
+                    hasPrefix = true;
+                    break;
+                }
+            }
+
+            if (hasPrefix) {
+                frontList.push(currentString);
+            } else {
+                rearList.push(currentString);
+            }
+        }
+
+        return frontList.concat(rearList);
+        }
+
+        function removeDuplicateLetters(list) {
+            const newList = [];
+            for (let i = 0; i < list.length; i++) {
+                let hasDuplicate = false;
+                const currentString = list[i];
+
+                for (let j = 0; j < currentString.length - 2; j++) {
+                    if (currentString[j] === currentString[j + 1] && currentString[j] !== 'n') {
+                        hasDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!hasDuplicate) {
+                    newList.push(currentString);
+                }
+            }
+
+            return newList;
+        }
+
+
+
         function displayWord(word) {
             var result = document.getElementById("res")
             var btn = document.createElement('button');
@@ -230,9 +295,16 @@
 
             // Remove "words" we know that definetly aren't words
             combinations = removeNonMatchingElements(combinations);
+
+            if (letters.length > 5) {
+                // Remove "words" if the have 2 letters repeating
+                combinations = removeDuplicateLetters(combinations);
+
+                // Place "words" that have a larger chance of being words.
+                combinations = rearrangeStrings(combinations);
+            }
         
 
-            let wordsFound = [];
             let on = 0; // On what "combination" we are on?
             while (combinations.length > on) {
                 // let realWord = false;
@@ -241,7 +313,6 @@
                 if (word.length > 1) {
                     // it exists
                     word = combinations[on]
-                    wordsFound.push(word); 
                     displayWord(word)
                 }
 
@@ -249,13 +320,13 @@
 
                 var Percentage = Math.floor((on/combinations.length)*100); // How much progress has been done?
                 var words = combinations.length-on;
-                document.getElementById('comp').innerHTML = `(${Percentage}%) Checking ${words} ${words === 1 ? "word" : "words"}`;
+                document.getElementById('comp').innerHTML = `(${Percentage}%) Checking ${words} words`;
             }
 
             // We are done with this cycle.
             // remove some letters and start again
             
-            if (letters.length === 3) return;
+            if (letters.length === 4) return;
 
             const changedWords = removeAndAddToList(letters);
             
@@ -295,7 +366,7 @@
 
             let combinations = factorial(val.length)
 
-            comp.innerHTML = "Estimated words: "+combinations;
+            comp.innerHTML = "Estimated "+combinations+" words to check";
 
             const search = document.getElementById('search');
 
@@ -303,10 +374,15 @@
 
             cache = []
             
+            const start = performance.now()
 
             await getword(val);
             search.style.display = "inline";
-            document.getElementById('comp').innerHTML = "Done!";
+
+            const speed = Math.floor(performance.now()-start)/1000
+            document.getElementById('comp').innerHTML = "Done! Took " + speed + "s";
+
+
         }
 
         document.getElementById("search").addEventListener("click", search); 
