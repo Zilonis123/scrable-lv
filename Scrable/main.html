@@ -379,8 +379,14 @@
             await getword(val.toLowerCase());
             search.style.display = "inline";
 
-            const speed = Math.floor(performance.now()-start)/1000
-            document.getElementById('comp').innerHTML = "Done! Took " + speed + "s";
+            let speed = Math.floor(performance.now()-start)/1000;
+            let timeDuration = "s"
+            if (speed > 60) {
+                speed = speed%60;
+                timeDuration = "min";
+            }
+
+            document.getElementById('comp').innerHTML = "Done! Took " + speed + timeDuration;
 
 
         }
