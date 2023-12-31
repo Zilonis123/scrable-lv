@@ -16,18 +16,11 @@ npm install
 ```
 
 ### How to run
-First copy the .env-example to .env
-```bash
-cp .env-example .env
-```
-Then open the .env file in any text editor and add your ip address (on linux just run `hostname -I`)
-You also may want to change the port, but that's purely optional.
-
-Then you may start the application with this line
+Start the application with this line
 ```bash
 node .
 ```
-If everything went good and the ip was correct the website is now working! 👍
+The website is now working! 👍
 
 ### Instructions
 In the input section on the web place your letters (Note that the more letters you place the more word combinations the website will check)

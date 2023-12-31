@@ -1,6 +1,12 @@
 
 async function main(word) {
-    const res = await fetch("https://api.tezaurs.lv/v1/examples/" + word);
+    const res = await fetch("https://api.tezaurs.lv/v1/examples/" + word, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'API-Key': 'secret'
+        }
+      });
     const json = await res.json();
     return json;
 }
@@ -8,19 +14,15 @@ async function main(word) {
 
 
 
-function factorial(n){
-    let answer = 1;
-    if (n == 0 || n == 1){
-      return answer;
-    }else{
-      for(var i = n; i >= 1; i--){
-        answer = answer * i;
-      }
-      return answer;
-    }  
-  }
+function factorial(n) {
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+      result *= i;
+    }
+    return result;
+}
 
-  function swap(chars, i, j) {
+function swap(chars, i, j) {
     var tmp = chars[i];
     chars[i] = chars[j];
     chars[j] = tmp;
