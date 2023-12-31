@@ -11,7 +11,9 @@ async function search() {
 
     // Check if letters isn't larger than 7 letters because theres no need to check for 8! when 7! is smaller and scrable ...
     // .. only allows 7 letters per person
-    if (letters.length > 7) return;
+
+    // if the letters are less than 3 then there's no point in checking and the api might be faulty
+    if (letters.length > 7 || letters.length < 3) return;
 
     // Reset the input
     letters_input.value = "";
@@ -37,7 +39,27 @@ async function get_words(letters) {
         var arr = arrangements[i]
         checkWordValidity(arr, callback);
     }
+
+    if (letters.length >= 4) {
+        // remove one letter and go again
+        var new_words = removeOneLetter(letters);
+        new_words.forEach(word => {
+            get_words(word)
+        });
+    }
 }
+
+
+function removeOneLetter(input) {
+    const result = new Set();
+  
+    for (let i = 0; i < input.length; i++) {
+      const removedLetter = input.slice(0, i) + input.slice(i + 1);
+      result.add(removedLetter);
+    }
+  
+    return Array.from(result);
+  }
 
 function getAllUniquePermutations(str) {
     const result = new Set();
