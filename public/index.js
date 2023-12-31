@@ -35,11 +35,19 @@ async function get_words(letters) {
     const validWords = [];
     
     for (let i=0; i < arrangements.length; i++) {
+        var startTime = performance.now();
+        
         var arr = arrangements[i]
         var isValid = await checkWordValidity(arr);
         if (isValid) validWords.push(arr);
+
+        var duration = performance.now() - startTime;
+        var est = duration*(arrangements.length-i)/1000 // estimated time left
+
+        document.getElementById("est").innerText = est.toString() + "s"
     }
 
+    document.getElementById("est").innerText = ""
     return validWords
 }
 
