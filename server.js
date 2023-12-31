@@ -1,34 +1,37 @@
-const http = require('http');
-const fs = require('fs');
-const url = require('url');
+const express = require('express');
 const chalk = require("chalk")
-
-require("dotenv").config()
-
-const hostname = process.env.IP;
-const port = process.env.PORT;
+const app = express();
 
 
-fs.readFile('./Scrable/main.html', function (err, html) {
-    if (err) {
-        throw err; 
-    }       
-    const server = http.createServer(function(request, response) {  
-        response.writeHeader(200, {"Content-Type": 'text/html'});
-        var pathname=url.parse(request.url).pathname;
-        switch(pathname){
-            case '/subpage':
-                response.end('rip minesweeper');
-            break;
-            default:
-                response.write(html)
-                response.end();
-            break;
-        }
-    });
+const PORT = 3000;
 
-    server.listen(port, hostname, () => {
-        console.log(`Server running at ${chalk.green(`http://${hostname}:${port}`)}`)
-    });
+app.use(express.static('public'));
+
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/index.html');
 });
 
+
+// Get the local IP address dynamically
+const os = require('os');
+const ifaces = os.networkInterfaces();
+let ipAddress;
+
+Object.keys(ifaces).forEach((ifname) => {
+  ifaces[ifname].forEach((iface) => {
+    if (iface.family === 'IPv4' && !iface.internal) {
+      ipAddress = iface.address;
+    }
+  });
+});
+
+
+if (!ipAddress) {
+  console.error(chalk.red('Unable to determine the local IP address.'));
+  process.exit(1);
+}
+
+app.listen(PORT, () => {
+  console.log(`Server is running at ${chalk.green(`http://${ipAddress}:${PORT}`)}`);
+});
