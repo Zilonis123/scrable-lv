@@ -1,12 +1,6 @@
 
 async function main(word) {
-    const res = await fetch("https://api.tezaurs.lv/v1/examples/" + word, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'API-Key': 'secret'
-        }
-      });
+    const res = await fetch(`http://api.tezaurs.lv:8182/v1/inflections/${word}`);
     const json = await res.json();
     return json;
 }
