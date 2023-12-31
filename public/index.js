@@ -6,22 +6,17 @@ async function search() {
     var letters_input = document.getElementById("letters");
     var letters = letters_input.value;
 
+    // reset previous words
+    document.getElementById("words").innerText = ""
+
     // Check if letters isn't larger than 7 letters because theres no need to check for 8! when 7! is smaller and scrable ...
     // .. only allows 7 letters per person
     if (letters.length > 7) return;
 
-    // Reset the input and disable it
+    // Reset the input
     letters_input.value = "";
-    letters_input.disabled = true;
 
-    var words = await get_words(letters);
-
-    // Show the result to the user
-    document.getElementById("words").innerText = words.join(", ")
-
-    // enable the input
-    letters_input.disabled = false;
-
+    get_words(letters);
 }
 
 
@@ -29,26 +24,19 @@ async function get_words(letters) {
     
     // Generate all arangements without duplicates
     var arrangements = getAllUniquePermutations(letters);
-    
 
-    // Check all the arrangements and see if there are any real words
-    const validWords = [];
-    
-    for (let i=0; i < arrangements.length; i++) {
-        var startTime = performance.now();
-        
-        var arr = arrangements[i]
-        var isValid = await checkWordValidity(arr);
-        if (isValid) validWords.push(arr);
 
-        var duration = performance.now() - startTime;
-        var est = duration*(arrangements.length-i)/1000 // estimated time left
-
-        document.getElementById("est").innerText = est.toString() + "s"
+    function callback(word) {
+        // this function will run everytime that checkWordValidity finishes
+        var words_store = document.getElementById("words")
+        words_store.innerText += words_store.innerText.length == 0 ? word : `, ${word}`
     }
-
-    document.getElementById("est").innerText = ""
-    return validWords
+    
+    // Check all the arrangements and see if there are any real word
+    for (let i=0; i < arrangements.length; i++) {
+        var arr = arrangements[i]
+        checkWordValidity(arr, callback);
+    }
 }
 
 function getAllUniquePermutations(str) {
@@ -77,11 +65,13 @@ function getAllUniquePermutations(str) {
     return Array.from(result);
 }
     
-async function checkWordValidity(word) {
+async function checkWordValidity(word, callback=function(a,b){}) {
     try {
         var data = await find(word);
         var isValid = data.length >= 1 && word.length > 3;
-        return isValid
+
+        if (isValid) callback(word);
+        return isValid;
     } catch (err) {
         return false
     }
