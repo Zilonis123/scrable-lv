@@ -1,12 +1,9 @@
 
-async function main(word) {
+async function find(word) {
     const res = await fetch(`http://api.tezaurs.lv:8182/v1/inflections/${word}`);
     const json = await res.json();
     return json;
 }
-
-
-
 
 function factorial(n) {
     let result = 1;
@@ -82,23 +79,25 @@ function nonemburtu(vards, reize) {
     return vards.replace(vards[vards.length-reize], '');
 }
 
-async function getword(l, count, combinations, words, lorig=null, times=0, combi) {
+async function getword(l, count, combinations, words=[], lorig=null, times=0, combi) {
     if (!combinations || combinations.length == 0) {
         combinations = getAnagrams(l);
         combinations = filt(combinations);
     }
-    if (!words) words = [];
 
     let word = [];
     let found = false;
     while (!found) {
-        word = await main(combinations[count[0]]);
+
+        // Fetch the word and check if its real
+        const combination = combinations[count[0]]
+        word = await find(combination);
         if (word.length > 1) found = true;
-        word = combinations[count[0]];
+        word = combination;
         count[0]++;
         count[1]++;
 
-        // parbaudam vai jau tie procenti tika ievaditi
+        // Update the procentage on the screen
         const prev = Math.floor(((count[1]-1)/combi)*100);
         const jauns = Math.floor(((count[1])/combi)*100);
         if (prev != jauns && jauns < 101) {
@@ -108,22 +107,13 @@ async function getword(l, count, combinations, words, lorig=null, times=0, combi
 
 
         if (count[0] > combinations.length) {
-            // vairak iespejamu vardu kombinaciju nav
-            if (words.length != 0) { // piedavajam citas opcijas
-                console.log("Atradam " + words.join(" "));
-                if (words.length == 1) {
-                    const locijumi = await atrastLocijumus(words[0]);
-                    console.log("Iespejeami locijumi: " + locijumi.join());
-                }
-            }
+            // No more possible combinations
             
-            // visas kombinacijas tika izmantotas
-            // meiginam atkal bet nonemam burtu
-            if (!lorig) { // sis ir pirmais meiginajums nonemt burtu
-                setTimeout(function() {
-                    const lett = l.slice(0, -1);
-                    getword(lett, [0, count[1]], null, words, l, 1, combi);
-                }, 500);
+            // Try again, but lets remove 1 letter
+            if (!lorig) {
+                const lett = l.slice(0, -1);
+                getword(lett, [0, count[1]], null, words, l, 1, combi);
+
                 return;
             } else {
                 if (times == lorig.length) {
@@ -153,13 +143,15 @@ async function getword(l, count, combinations, words, lorig=null, times=0, combi
 async function btnClick() {
     const val = document.getElementById('fname').value;
     const result = document.getElementById('res');
+
     result.innerHTML = "";
+
     const comp = document.getElementById('comp');
     comp.innerHTML = '';
 
-    const combinacijas = factorial(val.length) + (factorial(val.length-1) * (val.length-1));
+    const allCombinations = factorial(val.length) + (factorial(val.length-1) * (val.length-1));
     const comb = document.getElementById('comb');
-    comb.innerHTML = "Vardu kombinacijas: "+combinacijas;
+    comb.innerHTML = `Vardu kombinacijas: ${allCombinations}`;
 
-    if (val.length > 1) getword(val, [0,0], null, null, null,null, combinacijas);
+    if (val.length > 1) getword(val, [0,0], null, null, null,null, allCombinations);
 }
