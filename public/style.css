@@ -1,10 +1,45 @@
-* {
-    padding: 10px;
-    text-align: center;
-    margin-top: 15px;
-    font-family: 'Lato', sans-serif;
-    font-weight: 300;
+@import url('https://fonts.googleapis.com/css?family=Reem%20Kufi:700|Lato:400');
+
+
+:root {
+    --text: #f1e7ea;
+    --background: #0a0506;
+    --primary: #d796aa;
+    --secondary: #832743;
+    --accent: #da567f;
 }
+
+* {
+    text-align: center;
+    color: var(--text);
+}
+
+
+body {
+  font-family: 'Lato';
+  font-weight: 400;
+  padding: 50px 70px;
+  background-color: var(--background);
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Reem Kufi';
+  font-weight: 700;
+}
+
+html {font-size: 100%;} /* 16px */
+
+h1 {font-size: 4.210rem; /* 67.36px */}
+
+h2 {font-size: 3.158rem; /* 50.56px */}
+
+h3 {font-size: 2.369rem; /* 37.92px */}
+
+h4 {font-size: 1.777rem; /* 28.48px */}
+
+h5 {font-size: 1.333rem; /* 21.28px */}
+
+small {font-size: 0.750rem; /* 12px */}
 
 label, input, button {
     font-weight: 400;
@@ -56,7 +91,7 @@ button:hover {
     display: inline-block;
     outline: 0;
     border: 0;
-    background-image: linear-gradient(to right,#e052a0,#f15c41);
+    background-image: linear-gradient(to right, var(--primary),var(--accent));
     cursor: pointer;
     border-radius: 2px;
     color: #fff;
@@ -67,14 +102,15 @@ button:hover {
     line-height: 36px;
     padding: 0 10px;
     font-size: 14px;
+    transition: 3s ease-in;
 }
 
 #search:hover {
-    background-image: linear-gradient(to right,#3ec7e0,#526bf4);
+    background-image: linear-gradient(to right,var(--accent),var(--accent));
 }
 
 input {
-    background-color: #fff;
+    background-color: var(--secondary);
     height: 31px;
     padding: 3px 7px;
     line-height: normal;
@@ -83,11 +119,10 @@ input {
     border-radius: 3px;
     box-shadow: 0 1px 0 rgb(255 255 255 / 50%), 0 1px 0 rgb(0 0 0 / 7%) inset;
     outline: 0;
-    color: #111;
     font-size: 13px;
 }
 
 input:focus{
-    border-color: #e77600;
-    box-shadow: 0 0 3px 2px rgb(228 121 17 / 50%);
+    border-color: var(--accent);
+    box-shadow: 0 0 3px 2px rgb(215, 150, 170 / 50%);
 }
