@@ -1,27 +1,27 @@
 # Scrabble
-Website running with http and accesing https://tezaurs.lv api.
+This Express.js website utilizes the [tezaurs API](https://tezaurs.lv) to process a string of letters, providing a highly accurate 95% list of valid words.
 
-## How to download
-First check if you have node.js installed by writting this into the command prompt
+## Installation
 ```bash
-node --version
-```
+# Clone the Scrabble-LV repository and navigate to the project directory
+git clone https://github.com/Zilonis123/scrable-lv && cd scrable-lv
 
-If you don't have [node](https://nodejs.org/en/download/) installed here's where you can find it.
-
-## Install the dependenices
-Use the npm package manager.
-```bash
+# Install dependencies
 npm install
-```
 
-### How to run
-Start the application with this line
-```bash
+# Run the application
 node .
 ```
-The website is now working! 👍
 
-### Instructions
-In the input section on the web place your letters (Note that the more letters you place the more word combinations the website will check)
-and click the "Search" button. If everything goes well there will be some results presented as buttons that when clicked show inflections of the word.
+## Usage
+In the search bar, enter the letters you have. Keep in mind that the search query expands in complexity as you input more letters. For instance, if you provide 5 letters, the program will examine roughly 5! + 4! possibilities.
+
+## Contributing
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
